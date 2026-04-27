@@ -151,6 +151,18 @@
         flex-wrap: wrap;
       }
 
+      .postcard__footer--front {
+        flex-direction: column;
+      }
+
+      .camera-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
       button {
         font-family: inherit;
         font-size: 0.82rem;
@@ -348,15 +360,17 @@
                   <button type="button" class="btn-primary" id="retryCamera">Try again</button>
                 </div>
               </div>
-              <div class="postcard__footer">
-                <button type="button" class="btn-ghost" id="flipFront" disabled aria-label="View message side">
-                  Message side
-                </button>
-                <button type="button" class="btn-shutter" id="shutter" aria-label="Take photo">
-                  <span>Take photo</span>
-                </button>
-                <button type="button" class="btn-ghost" id="switchCamera" hidden aria-label="Switch camera">
-                  Flip cam
+              <div class="postcard__footer postcard__footer--front">
+                <div class="camera-controls">
+                  <button type="button" class="btn-shutter" id="shutter" aria-label="Take photo">
+                    <span>Take photo</span>
+                  </button>
+                  <button type="button" class="btn-ghost" id="switchCamera" hidden aria-label="Switch camera">
+                    Flip cam
+                  </button>
+                </div>
+                <button type="button" class="btn-ghost" id="flipFront" hidden disabled aria-label="Write message">
+                  Write message
                 </button>
               </div>
             </div>
@@ -464,6 +478,7 @@
         function setFlipped(on) {
           flipInner.classList.toggle("is-flipped", on);
           flipFront.disabled = !capturedDataUrl;
+          flipFront.hidden = !capturedDataUrl;
         }
 
         shutter.addEventListener("click", () => {
@@ -478,12 +493,14 @@
           photoPreview.src = capturedDataUrl;
           viewport.classList.add("has-photo");
           flipFront.disabled = false;
-          setFlipped(true);
-          memory.focus();
+          flipFront.hidden = false;
         });
 
         flipFront.addEventListener("click", () => {
-          if (capturedDataUrl) setFlipped(true);
+          if (capturedDataUrl) {
+            setFlipped(true);
+            memory.focus();
+          }
         });
 
         flipBack.addEventListener("click", () => {
@@ -496,6 +513,7 @@
           capturedDataUrl = "";
           photoPreview.removeAttribute("src");
           flipFront.disabled = true;
+          flipFront.hidden = true;
           setFlipped(false);
           await startCamera();
         });
@@ -506,6 +524,7 @@
           capturedDataUrl = "";
           photoPreview.removeAttribute("src");
           flipFront.disabled = true;
+          flipFront.hidden = true;
           setFlipped(false);
           await startCamera();
         });
