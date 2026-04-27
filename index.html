@@ -324,9 +324,9 @@
       }
 
       .finished-view {
-        width: min(100%, 50dvh, 520px);
+        width: min(100%, 46dvh, 460px);
         display: grid;
-        gap: clamp(12px, 2.4vw, 18px);
+        gap: clamp(8px, 1.8vw, 14px);
       }
 
       .finished-view[hidden] {
@@ -392,14 +392,50 @@
           max-width: min(94vw, 520px);
         }
 
+        .finished-view {
+          width: min(88vw, 40dvh, 340px);
+          gap: 8px;
+        }
+
+        .finished-card {
+          padding: 10px;
+        }
+
         .back-body {
-          grid-template-columns: minmax(0, 1fr) minmax(110px, 0.78fr);
-          gap: 14px;
+          grid-template-columns: minmax(0, 1fr) minmax(92px, 0.72fr);
+          gap: 10px;
         }
 
         .location-panel {
-          padding-left: 14px;
-          gap: 12px;
+          padding-left: 10px;
+          gap: 8px;
+        }
+
+        .location-label {
+          font-size: 0.52rem;
+          letter-spacing: 0.16em;
+        }
+
+        .location-lines {
+          gap: 8px;
+        }
+
+        .location-line {
+          min-height: 1rem;
+        }
+
+        .location-value {
+          font-size: 0.64rem;
+          line-height: 1.25;
+        }
+
+        .finished-message {
+          font-size: 0.9rem;
+          line-height: 1.45;
+        }
+
+        .finished-actions {
+          margin-top: 10px;
         }
 
       }
@@ -700,29 +736,34 @@
           if (!capturedDataUrl) return;
           const exportCanvas = document.createElement("canvas");
           const exportCtx = exportCanvas.getContext("2d");
-          const width = 1200;
-          const cardHeight = Math.round(width / 1.55);
+          const outerPadding = 72;
+          const cardWidth = 1200;
+          const cardHeight = Math.round(cardWidth / 1.55);
           const gap = 36;
           const padding = 42;
-          exportCanvas.width = width;
-          exportCanvas.height = cardHeight * 2 + gap;
+          exportCanvas.width = cardWidth + outerPadding * 2;
+          exportCanvas.height = cardHeight * 2 + gap + outerPadding * 2;
 
           exportCtx.fillStyle = "#e5e2dc";
           exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+          exportCtx.strokeStyle = "rgba(42, 38, 32, 0.16)";
+          exportCtx.lineWidth = 3;
+          exportCtx.strokeRect(outerPadding / 2, outerPadding / 2, exportCanvas.width - outerPadding, exportCanvas.height - outerPadding);
 
           function drawCard(y) {
+            const x = outerPadding;
             exportCtx.fillStyle = "#f3eadc";
-            exportCtx.fillRect(0, y, width, cardHeight);
+            exportCtx.fillRect(x, y, cardWidth, cardHeight);
             exportCtx.strokeStyle = "#e1d5c3";
             exportCtx.lineWidth = 3;
-            exportCtx.strokeRect(1.5, y + 1.5, width - 3, cardHeight - 3);
+            exportCtx.strokeRect(x + 1.5, y + 1.5, cardWidth - 3, cardHeight - 3);
           }
 
-          drawCard(0);
+          drawCard(outerPadding);
           const image = await loadImage(capturedDataUrl);
-          const imageX = padding;
-          const imageY = padding;
-          const imageW = width - padding * 2;
+          const imageX = outerPadding + padding;
+          const imageY = outerPadding + padding;
+          const imageW = cardWidth - padding * 2;
           const imageH = cardHeight - padding * 2;
           const sourceRatio = image.width / image.height;
           const targetRatio = imageW / imageH;
@@ -739,9 +780,9 @@
           }
           exportCtx.drawImage(image, sx, sy, sw, sh, imageX, imageY, imageW, imageH);
 
-          const backY = cardHeight + gap;
+          const backY = outerPadding + cardHeight + gap;
           drawCard(backY);
-          const dividerX = Math.round(width * 0.56);
+          const dividerX = outerPadding + Math.round(cardWidth * 0.56);
           exportCtx.strokeStyle = "rgba(42, 38, 32, 0.32)";
           exportCtx.lineWidth = 2;
           exportCtx.beginPath();
@@ -751,12 +792,12 @@
 
           exportCtx.fillStyle = "#2a2620";
           exportCtx.font = "italic 44px Georgia, serif";
-          drawWrappedText(exportCtx, memory.value.trim() || "I saw this view...", padding, backY + padding + 54, dividerX - padding * 2, 62);
+          drawWrappedText(exportCtx, memory.value.trim() || "I saw this view...", outerPadding + padding, backY + padding + 54, dividerX - outerPadding - padding * 2, 62);
 
           exportCtx.font = "italic 30px Georgia, serif";
           const location = locationText || "Location unavailable";
           const lineStart = dividerX + padding;
-          const lineWidth = width - lineStart - padding;
+          const lineWidth = outerPadding + cardWidth - lineStart - padding;
           const firstLineY = backY + Math.round(cardHeight * 0.42);
           exportCtx.fillText(location, lineStart, firstLineY - 12);
           for (let i = 0; i < 3; i += 1) {
