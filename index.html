@@ -324,7 +324,7 @@
       }
 
       .finished-view {
-        width: min(100%, 50dvh, 480px);
+        width: min(100%, 52dvh, 500px);
         display: grid;
         gap: clamp(8px, 1.8vw, 14px);
       }
@@ -392,7 +392,7 @@
         }
 
         .finished-view {
-          width: min(90vw, 43dvh, 360px);
+          width: min(90vw, 46dvh, 380px);
           gap: 8px;
         }
 
@@ -493,8 +493,14 @@
         </div>
         <div class="postcard__footer postcard__footer--outside" id="frontActions">
           <div class="camera-controls">
+            <button type="button" class="btn-ghost" id="zoomOut" hidden aria-label="Zoom out">
+              -
+            </button>
             <button type="button" class="btn-shutter" id="shutter" aria-label="Take photo">
               <span>Take photo</span>
+            </button>
+            <button type="button" class="btn-ghost" id="zoomIn" hidden aria-label="Zoom in">
+              +
             </button>
           </div>
           <div class="camera-controls post-capture-controls">
@@ -552,6 +558,8 @@
         const viewport = document.getElementById("viewport");
         const photoPreview = document.getElementById("photoPreview");
         const shutter = document.getElementById("shutter");
+        const zoomOut = document.getElementById("zoomOut");
+        const zoomIn = document.getElementById("zoomIn");
         const retryPhoto = document.getElementById("retryPhoto");
         const flipScene = document.getElementById("flipScene");
         const frontActions = document.getElementById("frontActions");
@@ -577,6 +585,9 @@
         let stream = null;
         let capturedDataUrl = "";
         let locationText = "";
+        let zoomTrack = null;
+        let zoomCapabilities = null;
+        let zoomLevel = null;
 
         function showError(message) {
           errorText.textContent = message;
@@ -593,6 +604,45 @@
             stream.getTracks().forEach((t) => t.stop());
             stream = null;
           }
+          zoomTrack = null;
+          zoomCapabilities = null;
+          zoomLevel = null;
+          zoomOut.hidden = true;
+          zoomIn.hidden = true;
+        }
+
+        function updateZoomButtons() {
+          if (!zoomCapabilities || zoomLevel === null) return;
+          const min = zoomCapabilities.min;
+          const max = zoomCapabilities.max;
+          zoomOut.disabled = zoomLevel <= min;
+          zoomIn.disabled = zoomLevel >= max;
+        }
+
+        async function applyZoom(value) {
+          if (!zoomTrack || !zoomCapabilities) return;
+          const min = zoomCapabilities.min;
+          const max = zoomCapabilities.max;
+          zoomLevel = Math.min(max, Math.max(min, value));
+          try {
+            await zoomTrack.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
+            updateZoomButtons();
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        async function setupZoomControls() {
+          const [track] = stream ? stream.getVideoTracks() : [];
+          const capabilities = track && track.getCapabilities ? track.getCapabilities() : {};
+          if (!track || !capabilities.zoom) return;
+          zoomTrack = track;
+          zoomCapabilities = capabilities.zoom;
+          const minZoom = zoomCapabilities.min || 1;
+          zoomLevel = minZoom;
+          zoomOut.hidden = false;
+          zoomIn.hidden = false;
+          await applyZoom(minZoom);
         }
 
         async function startCamera() {
@@ -606,6 +656,7 @@
             });
             video.srcObject = stream;
             await video.play();
+            await setupZoomControls();
             shutter.disabled = false;
           } catch (err) {
             showError(
@@ -861,6 +912,18 @@
         retryPhoto.addEventListener("click", () => {
           clearPhoto();
           setFlipped(false);
+        });
+
+        zoomOut.addEventListener("click", () => {
+          if (!zoomCapabilities || zoomLevel === null) return;
+          const step = zoomCapabilities.step || 0.1;
+          applyZoom(zoomLevel - step);
+        });
+
+        zoomIn.addEventListener("click", () => {
+          if (!zoomCapabilities || zoomLevel === null) return;
+          const step = zoomCapabilities.step || 0.1;
+          applyZoom(zoomLevel + step);
         });
 
         doneCard.addEventListener("click", () => {
