@@ -431,9 +431,6 @@
                   <button type="button" class="btn-shutter" id="shutter" aria-label="Take photo">
                     <span>Take photo</span>
                   </button>
-                  <button type="button" class="btn-ghost" id="switchCamera" hidden aria-label="Switch camera">
-                    Flip cam
-                  </button>
                 </div>
                 <div class="camera-controls">
                   <button type="button" class="btn-ghost" id="retryPhoto" hidden aria-label="Retake photo">
@@ -528,12 +525,10 @@
         const errorBanner = document.getElementById("errorBanner");
         const errorText = document.getElementById("errorText");
         const retryCamera = document.getElementById("retryCamera");
-        const switchCameraBtn = document.getElementById("switchCamera");
         const canvas = document.getElementById("captureCanvas");
         const ctx = canvas.getContext("2d");
 
         let stream = null;
-        let facingMode = "environment";
         let capturedDataUrl = "";
 
         function showError(message) {
@@ -559,17 +554,12 @@
           shutter.disabled = true;
           try {
             stream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+              video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
               audio: false,
             });
             video.srcObject = stream;
             await video.play();
             shutter.disabled = false;
-            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-              const devices = await navigator.mediaDevices.enumerateDevices();
-              const videos = devices.filter((d) => d.kind === "videoinput");
-              switchCameraBtn.hidden = videos.length < 2;
-            }
           } catch (err) {
             showError(
               "Camera access is needed for your postcard. Allow the camera in your browser settings, or try a secure (https) connection."
@@ -636,13 +626,6 @@
 
         flipBack.addEventListener("click", () => {
           setFlipped(false);
-        });
-
-        switchCameraBtn.addEventListener("click", async () => {
-          facingMode = facingMode === "environment" ? "user" : "environment";
-          clearPhoto();
-          setFlipped(false);
-          await startCamera();
         });
 
         retryPhoto.addEventListener("click", () => {
