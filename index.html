@@ -369,9 +369,14 @@
                     Flip cam
                   </button>
                 </div>
-                <button type="button" class="btn-ghost" id="flipFront" hidden disabled aria-label="Write message">
-                  Write message
-                </button>
+                <div class="camera-controls">
+                  <button type="button" class="btn-ghost" id="retryPhoto" hidden aria-label="Retake photo">
+                    Retry
+                  </button>
+                  <button type="button" class="btn-ghost" id="flipFront" hidden disabled aria-label="Write message">
+                    Write message
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -417,6 +422,7 @@
         const viewport = document.getElementById("viewport");
         const photoPreview = document.getElementById("photoPreview");
         const shutter = document.getElementById("shutter");
+        const retryPhoto = document.getElementById("retryPhoto");
         const flipInner = document.getElementById("flipInner");
         const flipFront = document.getElementById("flipFront");
         const flipBack = document.getElementById("flipBack");
@@ -479,6 +485,16 @@
           flipInner.classList.toggle("is-flipped", on);
           flipFront.disabled = !capturedDataUrl;
           flipFront.hidden = !capturedDataUrl;
+          retryPhoto.hidden = !capturedDataUrl;
+        }
+
+        function clearPhoto() {
+          viewport.classList.remove("has-photo");
+          capturedDataUrl = "";
+          photoPreview.removeAttribute("src");
+          flipFront.disabled = true;
+          flipFront.hidden = true;
+          retryPhoto.hidden = true;
         }
 
         shutter.addEventListener("click", () => {
@@ -494,6 +510,7 @@
           viewport.classList.add("has-photo");
           flipFront.disabled = false;
           flipFront.hidden = false;
+          retryPhoto.hidden = false;
         });
 
         flipFront.addEventListener("click", () => {
@@ -509,22 +526,19 @@
 
         switchCameraBtn.addEventListener("click", async () => {
           facingMode = facingMode === "environment" ? "user" : "environment";
-          viewport.classList.remove("has-photo");
-          capturedDataUrl = "";
-          photoPreview.removeAttribute("src");
-          flipFront.disabled = true;
-          flipFront.hidden = true;
+          clearPhoto();
           setFlipped(false);
           await startCamera();
         });
 
+        retryPhoto.addEventListener("click", () => {
+          clearPhoto();
+          setFlipped(false);
+        });
+
         newCard.addEventListener("click", async () => {
           memory.value = "";
-          viewport.classList.remove("has-photo");
-          capturedDataUrl = "";
-          photoPreview.removeAttribute("src");
-          flipFront.disabled = true;
-          flipFront.hidden = true;
+          clearPhoto();
           setFlipped(false);
           await startCamera();
         });
