@@ -246,7 +246,9 @@
       .back-body {
         flex: 1;
         min-height: 0;
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(120px, 0.82fr);
+        gap: clamp(18px, 4vw, 42px);
       }
 
       .message-panel {
@@ -278,6 +280,47 @@
       .memory-input::placeholder {
         color: rgba(42, 38, 32, 0.35);
         font-style: italic;
+      }
+
+      .location-panel {
+        border-left: 1px solid var(--line);
+        padding-left: clamp(18px, 4vw, 40px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: clamp(14px, 3vw, 24px);
+      }
+
+      .location-label {
+        margin: 0;
+        font-size: 0.62rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .location-lines {
+        display: grid;
+        gap: clamp(12px, 2.5vw, 20px);
+      }
+
+      .location-line {
+        min-height: 1.3rem;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .location-value {
+        margin: 0;
+        padding-bottom: 0.35rem;
+        font-family: "Libre Baskerville", Georgia, serif;
+        font-size: clamp(0.72rem, 2.1vw, 0.92rem);
+        font-style: italic;
+        line-height: 1.35;
+        color: var(--ink);
+      }
+
+      .location-value.is-empty {
+        color: rgba(42, 38, 32, 0.38);
       }
 
       .finished-view {
@@ -352,6 +395,16 @@
           aspect-ratio: 1.3 / 1;
         }
 
+        .back-body {
+          grid-template-columns: minmax(0, 1fr) minmax(110px, 0.78fr);
+          gap: 14px;
+        }
+
+        .location-panel {
+          padding-left: 14px;
+          gap: 12px;
+        }
+
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -394,6 +447,14 @@
                     autocomplete="off"
                   ></textarea>
                 </div>
+                <div class="location-panel" aria-label="Photo location">
+                  <p class="location-label">Location</p>
+                  <div class="location-lines">
+                    <p class="location-line location-value is-empty" id="locationPreview">Waiting for location</p>
+                    <span class="location-line"></span>
+                    <span class="location-line"></span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -434,6 +495,14 @@
             <div class="message-panel">
               <p class="finished-message" id="finishedMessage"></p>
             </div>
+            <div class="location-panel" aria-label="Finished photo location">
+              <p class="location-label">Location</p>
+              <div class="location-lines">
+                <p class="location-line location-value is-empty" id="finishedLocation"></p>
+                <span class="location-line"></span>
+                <span class="location-line"></span>
+              </div>
+            </div>
           </div>
           <div class="finished-actions">
             <button type="button" class="btn-primary" id="newCard">New postcard</button>
@@ -461,6 +530,8 @@
         const finishedView = document.getElementById("finishedView");
         const finishedPhoto = document.getElementById("finishedPhoto");
         const finishedMessage = document.getElementById("finishedMessage");
+        const locationPreview = document.getElementById("locationPreview");
+        const finishedLocation = document.getElementById("finishedLocation");
         const newCard = document.getElementById("newCard");
         const memory = document.getElementById("memory");
         const errorBanner = document.getElementById("errorBanner");
@@ -471,6 +542,7 @@
 
         let stream = null;
         let capturedDataUrl = "";
+        let locationText = "";
 
         function showError(message) {
           errorText.textContent = message;
@@ -521,11 +593,44 @@
         function clearPhoto() {
           viewport.classList.remove("has-photo");
           capturedDataUrl = "";
+          locationText = "";
           photoPreview.removeAttribute("src");
           finishedPhoto.removeAttribute("src");
+          setLocationText(locationPreview, "Waiting for location", true);
+          setLocationText(finishedLocation, "", true);
           flipFront.disabled = true;
           flipFront.hidden = true;
           retryPhoto.hidden = true;
+        }
+
+        function setLocationText(element, text, isEmpty) {
+          element.textContent = text;
+          element.classList.toggle("is-empty", isEmpty);
+        }
+
+        function formatLocation(coords) {
+          return `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
+        }
+
+        function captureLocation() {
+          if (!navigator.geolocation) {
+            locationText = "Location unavailable";
+            setLocationText(locationPreview, locationText, true);
+            return;
+          }
+
+          setLocationText(locationPreview, "Finding location...", true);
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              locationText = formatLocation(position.coords);
+              setLocationText(locationPreview, locationText, false);
+            },
+            () => {
+              locationText = "Location unavailable";
+              setLocationText(locationPreview, locationText, true);
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          );
         }
 
         function showFinishedPostcard() {
@@ -534,6 +639,7 @@
           finishedPhoto.src = capturedDataUrl;
           finishedMessage.textContent = message || "I saw this view...";
           finishedMessage.classList.toggle("is-empty", !message);
+          setLocationText(finishedLocation, locationText || "Location unavailable", !locationText);
           flipScene.hidden = true;
           finishedView.hidden = false;
           stopStream();
@@ -560,6 +666,7 @@
           flipFront.disabled = false;
           flipFront.hidden = false;
           retryPhoto.hidden = false;
+          captureLocation();
         });
 
         flipFront.addEventListener("click", () => {
