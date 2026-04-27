@@ -155,12 +155,12 @@
         flex-wrap: wrap;
       }
 
-      .postcard__footer--front {
+      .postcard__footer--outside {
         margin-top: 14px;
         flex-direction: column;
       }
 
-      .postcard__footer--front[hidden] {
+      .postcard__footer--outside[hidden] {
         display: none;
       }
 
@@ -242,30 +242,14 @@
       .back-body {
         flex: 1;
         min-height: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(140px, 0.8fr);
-        gap: clamp(18px, 4vw, 42px);
+        display: flex;
       }
 
       .message-panel {
         display: flex;
         flex-direction: column;
-        gap: 12px;
         min-width: 0;
-      }
-
-      .postcard-title {
-        margin: 0;
-        font-family: "Libre Baskerville", Georgia, serif;
-        font-size: clamp(1.35rem, 4.2vw, 2rem);
-        font-weight: 400;
-      }
-
-      .back-label {
-        font-size: 0.62rem;
-        letter-spacing: 0.26em;
-        text-transform: uppercase;
-        color: var(--muted);
+        width: 100%;
       }
 
       .memory-input {
@@ -280,13 +264,7 @@
         font-style: italic;
         line-height: 1.6;
         color: var(--ink);
-        padding: 4px 2px 0;
-        background-image: repeating-linear-gradient(
-          transparent,
-          transparent calc(1.6em - 1px),
-          rgba(42, 38, 32, 0.12) calc(1.6em - 1px),
-          rgba(42, 38, 32, 0.12) 1.6em
-        );
+        padding: 0;
       }
 
       .memory-input:focus {
@@ -296,30 +274,6 @@
       .memory-input::placeholder {
         color: rgba(42, 38, 32, 0.35);
         font-style: italic;
-      }
-
-      .address-panel {
-        border-left: 1px solid var(--line);
-        padding-left: clamp(18px, 4vw, 40px);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: clamp(16px, 3vw, 26px);
-      }
-
-      .address-line {
-        border-bottom: 1px solid var(--line);
-        height: 1px;
-        width: 100%;
-      }
-
-      .date-mark {
-        align-self: flex-end;
-        margin: 0;
-        font-family: "Libre Baskerville", Georgia, serif;
-        font-size: clamp(0.72rem, 2.2vw, 0.9rem);
-        font-style: italic;
-        color: var(--muted);
       }
 
       .finished-view {
@@ -381,6 +335,7 @@
       .finished-actions {
         display: flex;
         justify-content: center;
+        margin-top: 14px;
       }
 
       @media (max-width: 560px) {
@@ -393,17 +348,6 @@
           aspect-ratio: 1.3 / 1;
         }
 
-        .back-body {
-          grid-template-columns: 1fr;
-          gap: 14px;
-        }
-
-        .address-panel {
-          border-left: 0;
-          border-top: 1px solid var(--line);
-          padding: 14px 0 0;
-          gap: 14px;
-        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -438,8 +382,6 @@
             <div class="postcard">
               <div class="back-body">
                 <div class="message-panel">
-                  <h1 class="postcard-title">Post Card</h1>
-                  <label class="back-label" for="memory">This space for writing messages</label>
                   <textarea
                     id="memory"
                     class="memory-input"
@@ -448,23 +390,11 @@
                     autocomplete="off"
                   ></textarea>
                 </div>
-                <div class="address-panel" aria-hidden="true">
-                  <span class="address-line"></span>
-                  <span class="address-line"></span>
-                  <span class="address-line"></span>
-                  <p class="date-mark">moment no. 25</p>
-                </div>
-              </div>
-              <div class="postcard__footer">
-                <button type="button" class="btn-ghost" id="flipBack" aria-label="Return to photo side">
-                  Photo side
-                </button>
-                <button type="button" class="btn-primary" id="doneCard">Done</button>
               </div>
             </div>
           </div>
         </div>
-        <div class="postcard__footer postcard__footer--front" id="frontActions">
+        <div class="postcard__footer postcard__footer--outside" id="frontActions">
           <div class="camera-controls">
             <button type="button" class="btn-shutter" id="shutter" aria-label="Take photo">
               <span>Take photo</span>
@@ -479,6 +409,14 @@
             </button>
           </div>
         </div>
+        <div class="postcard__footer postcard__footer--outside" id="backActions" hidden>
+          <div class="camera-controls">
+            <button type="button" class="btn-ghost" id="flipBack" aria-label="Return to photo side">
+              Flip
+            </button>
+            <button type="button" class="btn-primary" id="doneCard">Done</button>
+          </div>
+        </div>
       </div>
 
       <div class="finished-view" id="finishedView" hidden aria-live="polite">
@@ -490,15 +428,7 @@
         <div class="finished-card finished-card--message">
           <div class="back-body">
             <div class="message-panel">
-              <h1 class="postcard-title">Post Card</h1>
-              <p class="back-label">This space for writing messages</p>
               <p class="finished-message" id="finishedMessage"></p>
-            </div>
-            <div class="address-panel" aria-hidden="true">
-              <span class="address-line"></span>
-              <span class="address-line"></span>
-              <span class="address-line"></span>
-              <p class="date-mark">moment no. 25</p>
             </div>
           </div>
           <div class="finished-actions">
@@ -519,6 +449,7 @@
         const retryPhoto = document.getElementById("retryPhoto");
         const flipScene = document.getElementById("flipScene");
         const frontActions = document.getElementById("frontActions");
+        const backActions = document.getElementById("backActions");
         const flipInner = document.getElementById("flipInner");
         const flipFront = document.getElementById("flipFront");
         const flipBack = document.getElementById("flipBack");
@@ -577,6 +508,7 @@
         function setFlipped(on) {
           flipInner.classList.toggle("is-flipped", on);
           frontActions.hidden = on;
+          backActions.hidden = !on;
           flipFront.disabled = !capturedDataUrl;
           flipFront.hidden = !capturedDataUrl;
           retryPhoto.hidden = !capturedDataUrl;
@@ -607,6 +539,7 @@
           finishedView.hidden = true;
           flipScene.hidden = false;
           frontActions.hidden = false;
+          backActions.hidden = true;
         }
 
         shutter.addEventListener("click", () => {
