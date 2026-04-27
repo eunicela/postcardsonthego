@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1a1612">
-    <title>Postcard Moment</title>
+    <title>Postcards on the Go</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Libre+Baskerville:ital@0;1&display=swap");
 
@@ -857,9 +857,9 @@
 
           exportCanvas.toBlob(async (blob) => {
             if (!blob) return;
-            const file = new File([blob], "postcard-moment.png", { type: "image/png" });
+            const file = new File([blob], "postcards-on-the-go.png", { type: "image/png" });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: "Postcard Moment" });
+              await navigator.share({ files: [file], title: "Postcards on the Go" });
               return;
             }
 
